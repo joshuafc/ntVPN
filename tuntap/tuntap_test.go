@@ -1,9 +1,18 @@
 package tuntap
 
-import "testing"
+import (
+	"runtime"
+	"testing"
+)
 
 func TestNetInterface_Set(t *testing.T) {
-	net, err := CreateTapDevice("")
+	var deviceName string
+	if runtime.GOOS == "linux" {
+		deviceName = "testedge"
+	}else{
+		deviceName = ""
+	}
+	net, err := CreateTapDevice(deviceName)
 	if err != nil {
 		panic(err.Error())
 	}
