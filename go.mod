@@ -4,4 +4,4 @@ go 1.15
 
 require golang.org/x/sys v0.0.0-20210124154548-22da62e12c0c
 
-require golang.org/x/net v0.0.0-20210119194325-5f4716e94777
+require github.com/mdlayher/ethernet v0.0.0-20190313224307-5b5fc417d966
