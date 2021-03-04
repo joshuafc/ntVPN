@@ -18,23 +18,15 @@ import (
 */
 
 type IceAgent struct {
-	agent       *ice.Agent
-	conn        *ice.Conn
-	remoteSDP	*IceSDP
+	agent     *ice.Agent
+	conn      *ice.Conn
+	remoteSDP *IceSDP
 }
 
 type IceSDP struct {
 	frag       string
 	pwd        string
 	candidates []*ice.Candidate
-}
-
-func (i *IceSDP) FromString(str string) error  {
-	return nil
-}
-
-func (i *IceSDP) ToString() (string, error)  {
-	return "", nil
 }
 
 func NewIceAgent(stunAddr string, turnAddr string, turnUser string, turnPwd string) (*IceAgent, error) {
@@ -71,12 +63,12 @@ func (i *IceAgent) Dial() (*ice.Conn, error) {
 	return i.agent.Dial(context.TODO(), i.remoteSDP.frag, i.remoteSDP.pwd)
 }
 
-func (i *IceAgent) GetLocalSDP() (string, error) {
+func (i *IceAgent) GetLocalSDP() (IceSDP, error) {
 	var localSDP IceSDP
 	localSDP.frag, localSDP.pwd = i.agent.GetLocalUserCredentials()
 	candidateChan := make(chan *ice.Candidate)
 	i.agent.OnCandidate(func(c ice.Candidate) {
-		if c == nil{
+		if c == nil {
 			close(candidateChan)
 		} else {
 			candidateChan <- &c
@@ -84,22 +76,19 @@ func (i *IceAgent) GetLocalSDP() (string, error) {
 	})
 	i.agent.GatherCandidates()
 	for {
-		candidate, ok := <- candidateChan
+		candidate, ok := <-candidateChan
 		if !ok {
 			break
 		}
 		i.remoteSDP.candidates = append(i.remoteSDP.candidates, candidate)
 	}
-	return localSDP.ToString()
+	return localSDP, nil
 }
 
-func (i *IceAgent) SetRemoteSDP(sdp string) error {
-	err := i.remoteSDP.FromString(sdp)
-	if err != nil {
-		panic(err)
+func (i *IceAgent) SetRemoteSDP(sdp IceSDP) error {
+	*i.remoteSDP = sdp
+	for _, v := range i.remoteSDP.candidates {
+		i.agent.AddRemoteCandidate(*v)
 	}
-	//i.agent.AddRemoteCandidate()
-
-
 	return nil
 }
