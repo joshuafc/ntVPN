@@ -68,6 +68,7 @@ func lookup_adapter_reg_path(deviceRegistry string) string {
 }
 
 func CreateTapDevice(deviceName string) (TapDevice, error) {
+	deviceName = "" // ignore deviceName on Windows
 	key, ok := r.OpenKey(r.LOCAL_MACHINE, NETWORK_CONNECTIONS_KEY, r.READ)
 	if ok != nil {
 		println(ok.Error())

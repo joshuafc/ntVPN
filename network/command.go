@@ -3,6 +3,8 @@ package network
 import (
 	"bytes"
 	"encoding/gob"
+	"fmt"
+	"log"
 	"net"
 )
 
@@ -63,14 +65,19 @@ func (v *VPNCommandMsg) ToDetailMsg(msg interface{}) error {
 	return decoder.Decode(msg)
 }
 
-func ReadCommand(conn *net.Conn) (msg *VPNCommandMsg, err error) {
+func ReadCommand(conn net.Conn) (msg *VPNCommandMsg, err error) {
 	msg = new(VPNCommandMsg)
-	err = gob.NewDecoder(*conn).Decode(msg)
+	err = gob.NewDecoder(conn).Decode(msg)
+	log.Println("Read Data From " + conn.RemoteAddr().String() + ":")
+	log.Println(fmt.Sprintf("%+v", msg))
 	return
 }
 
-func WriteCommand(conn *net.Conn, msg *VPNCommandMsg) (err error) {
-	err = gob.NewEncoder(*conn).Encode(msg)
+func WriteCommand(conn net.Conn, msg *VPNCommandMsg) (err error) {
+	err = gob.NewEncoder(conn).Encode(msg)
+	log.Println("Write Data To" +
+		" " + conn.RemoteAddr().String() + ":")
+	log.Println(fmt.Sprintf("%+v", msg))
 	return
 }
 
@@ -95,11 +102,17 @@ type ClientUnRegisterResponseMsg struct {
 }
 
 type ClientQueryOthersRequestMsg struct {
-	Ok bool
+}
+
+type ClientInfo struct {
+	Ip   string
+	Mac  string
+	Mask string
+	Addr net.Addr
 }
 
 type ClientQueryOthersResponseMsg struct {
-	Ok bool
+	Clients []ClientInfo
 }
 
 type ClientConnectToRequestMsg struct {
