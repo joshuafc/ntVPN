@@ -16,12 +16,12 @@ import (
 )
 
 var (
-	addr = flag.String("addr", "localhost:8972", "server address")
-	cryptKey = flag.String("cryptKey", "rpcx-key", "cryptKey")
+	addr      = flag.String("addr", "localhost:8972", "server address")
+	cryptKey  = flag.String("cryptKey", "rpcx-key", "cryptKey")
 	cryptSalt = flag.String("cryptSalt", "rpcx-salt", "cryptSalt")
-	ip = flag.String("vpn_ip", "192.168.101.2", "specify vpn node ip address")
-	mask = flag.String("vpn_mask", "255.255.255.0", "specify vpn node mask")
-	mac = flag.String("vpn_mac", "", "specify vpn node mac address")
+	ip        = flag.String("vpn_ip", "192.168.101.2", "specify vpn node ip address")
+	mask      = flag.String("vpn_mask", "255.255.255.0", "specify vpn node mask")
+	mac       = flag.String("vpn_mac", "", "specify vpn node mac address")
 
 	format = logging.MustStringFormatter(
 		`%{color}%{time:15:04:05.000} %{shortfile} %{shortfunc} ▶ %{level:.4s} %{id:03x}%{color:reset} %{message}`,
@@ -66,11 +66,11 @@ func main() {
 	pc.Add(cs)
 	xclient.SetPlugins(pc)
 
-	args := network.ClientLoginRequestMsg{}
+	args := network.ClientRegReq{}
 
 	start := time.Now()
 	for i := 0; i < 10000; i++ {
-		reply := &network.ClientLoginResponseMsg{}
+		reply := &network.ClientRegReply{}
 		err := xclient.Call(context.Background(), "Mul", args, reply)
 		if err != nil {
 			log.Fatalf("failed to call: %v", err)
@@ -81,7 +81,6 @@ func main() {
 	qps := 10000 * 1000 / int(dur/time.Millisecond)
 	fmt.Printf("qps: %d call/s", qps)
 }
-
 
 type ConfigUDPSession struct{}
 

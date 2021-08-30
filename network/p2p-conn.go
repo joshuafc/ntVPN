@@ -2,7 +2,7 @@ package network
 
 import (
 	"context"
-	"github.com/pion/ice"
+	"github.com/pion/ice/v2"
 )
 
 /*
@@ -21,12 +21,6 @@ type IceAgent struct {
 	agent     *ice.Agent
 	conn      *ice.Conn
 	remoteSDP *IceSDP
-}
-
-type IceSDP struct {
-	frag       string
-	pwd        string
-	candidates []*ice.Candidate
 }
 
 func NewIceAgent(stunAddr string, turnAddr string, turnUser string, turnPwd string) (*IceAgent, error) {
@@ -65,22 +59,22 @@ func (i *IceAgent) Dial() (*ice.Conn, error) {
 
 func (i *IceAgent) GetLocalSDP() (IceSDP, error) {
 	var localSDP IceSDP
-	localSDP.frag, localSDP.pwd = i.agent.GetLocalUserCredentials()
-	candidateChan := make(chan *ice.Candidate)
+	localSDP.frag, localSDP.pwd, _ = i.agent.GetLocalUserCredentials()
+	candidateChan := make(chan ice.Candidate)
 	i.agent.OnCandidate(func(c ice.Candidate) {
 		if c == nil {
 			close(candidateChan)
 		} else {
-			candidateChan <- &c
+			candidateChan <- c
 		}
 	})
 	i.agent.GatherCandidates()
 	for {
 		candidate, ok := <-candidateChan
-		if !ok {
+		if !ok || candidate == nil {
 			break
 		}
-		i.remoteSDP.candidates = append(i.remoteSDP.candidates, candidate)
+		i.remoteSDP.candidates = append(i.remoteSDP.candidates, candidate.Marshal())
 	}
 	return localSDP, nil
 }
@@ -88,7 +82,8 @@ func (i *IceAgent) GetLocalSDP() (IceSDP, error) {
 func (i *IceAgent) SetRemoteSDP(sdp IceSDP) error {
 	*i.remoteSDP = sdp
 	for _, v := range i.remoteSDP.candidates {
-		i.agent.AddRemoteCandidate(*v)
+		candidate, _ := ice.UnmarshalCandidate(v)
+		i.agent.AddRemoteCandidate(candidate)
 	}
 	return nil
 }
